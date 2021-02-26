@@ -1,5 +1,7 @@
 import pytest
 from model.VendingMachine import VendingMachine
+from model.MoneyStack import MoneyStack
+from model.Item import Item
 
 
 def test_vending_machine_creation():
@@ -37,13 +39,12 @@ def test_coin_return():
     vending_machine.insert_nickel()
     vending_machine.insert_dime()
     vending_machine.insert_quarter()
-    vending_machine.insert_quarter()
-    vending_machine.coin_return()
-    # TODO What can we reasonably test here?
-    assert vending_machine.vending_stack.nickels == 0
-    assert vending_machine.vending_stack.dimes == 0
-    assert vending_machine.vending_stack.quarters == 0
-    assert vending_machine.vending_stack.dollars == 0
+    vending_machine.insert_dollar()
+    returned_coins: MoneyStack = vending_machine.coin_return()
+    assert returned_coins.dollars == 1
+    assert returned_coins.quarters == 1
+    assert returned_coins.dimes == 1
+    assert returned_coins.nickels == 1
 
 
 def test_service():
@@ -61,15 +62,53 @@ def test_service():
 def test_vend_item():
     vending_machine = VendingMachine()
     vending_machine.insert_dollar()
-    vending_machine.vend_item('B')
-    # TODO What can we reasonably test here?
-    assert vending_machine.vending_stack.get_total_value() == 0
+    your_stuff: (Item, MoneyStack) = vending_machine.vend_item('B')
+    assert your_stuff[0].name == "Mars Bars"
+    assert your_stuff[0].price == 100
+    assert your_stuff[1].dollars == 0
+    assert your_stuff[1].quarters == 0
+    assert your_stuff[1].dimes == 0
+    assert your_stuff[1].nickels == 0
 
 
-def test_calculate_change():
-    # TODO What can we reasonably test here?
-    assert 1 == 2
+def test_vend_item_not_enough_money():
+    vending_machine = VendingMachine()
+    your_stuff: (Item, MoneyStack) = vending_machine.vend_item('B')
+    assert your_stuff is None
 
 
+def test_return_change_none_required():
+    vending_machine = VendingMachine()
+    vending_machine.insert_dollar()
+    vending_machine.insert_quarter()
+    vending_machine.insert_quarter()
+    your_stuff: (Item, MoneyStack) = vending_machine.vend_item('C')
+    assert your_stuff[1].nickels == 0
+    assert your_stuff[1].dimes == 0
+    assert your_stuff[1].quarters == 0
+    assert your_stuff[1].dollars == 0
 
 
+def test_return_change_correct_amount():
+    vending_machine = VendingMachine()
+    vending_machine.insert_dollar()
+    vending_machine.insert_dollar()
+    your_stuff: (Item, MoneyStack) = vending_machine.vend_item('C')
+    assert your_stuff[1].nickels == 0
+    assert your_stuff[1].dimes == 0
+    assert your_stuff[1].quarters == 2
+    assert your_stuff[1].dollars == 0
+
+
+def test_return_change_not_enough_coins():
+    vending_machine = VendingMachine()
+    vending_machine.machine_stack.nickels = 0
+    vending_machine.machine_stack.dimes = 0
+    vending_machine.machine_stack.quarters = 0
+    vending_machine.machine_stack.dollars = 0
+    vending_machine.insert_dollar()
+    your_stuff: (Item, MoneyStack) = vending_machine.vend_item('A')
+    assert your_stuff[1].nickels == 0
+    assert your_stuff[1].dimes == 0
+    assert your_stuff[1].quarters == 0
+    assert your_stuff[1].dollars == 0

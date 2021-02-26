@@ -23,8 +23,8 @@ def main():
             vending_machine.vend_item('B')
         if command == "get-c":
             vending_machine.vend_item('C')
-        if command == "admin":
-            vending_machine.admin()
+        if command == "stock":
+            vending_machine.print_stock()
 
 
 if __name__ == "__main__":
